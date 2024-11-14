@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Page Source Viewer</title>
+    <link rel="stylesheet" href="style.css">  <!-- Link to external CSS -->
+</head>
+<body>
+
+    <div class="container">
+        <h1>Multiple Page Source Viewer</h1>
+        <form id="scrapeForm">
+            <label for="urls">Enter URLs (one per line):</label>
+            <textarea id="urls" name="urls" placeholder="Enter each URL on a new line..." required></textarea>
+            <button type="submit">Get Page Sources</button>
+        </form>
+
+        <div id="output" class="output-container">
+            <p>Page source will appear here...</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('scrapeForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const urlInput = document.getElementById('urls').value;
+            const urls = urlInput.split(/\n+/); // Split by new lines
+            document.getElementById('output').innerHTML = 'Loading... Please wait...';
+
+            let outputHtml = '';
+
+            for (let i = 0; i < urls.length; i++) {
+                const url = urls[i].trim();
+                if (url) {
+                    try {
+                        // Fetch the page source using AllOrigins API (proxy)
+                        const response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+                        const data = await response.text();
+
+                        // Append the page source result to the output
+                        outputHtml += `
+                            <div class="output-item">
+                                <h3 onclick="toggleSource(this)">Page Source for: ${url}</h3>
+                                <div class="source">${data}</div>
+                            </div>
+                        `;
+                    } catch (error) {
+                        outputHtml += `
+                            <div class="output-item">
+                                <h3 onclick="toggleSource(this)">Error Fetching: ${url}</h3>
+                                <div class="source">Error: Could not fetch the page source for this URL.</div>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            // Update the output container with all the results
+            document.getElementById('output').innerHTML = outputHtml;
+        });
+
+        // Toggle the visibility of page source
+        function toggleSource(header) {
+            const sourceDiv = header.nextElementSibling;
+            if (sourceDiv.style.display === 'none' || !sourceDiv.style.display) {
+                sourceDiv.style.display = 'block';
+            } else {
+                sourceDiv.style.display = 'none';
+            }
+        }
+    </script>
+
+</body>
+</html>
